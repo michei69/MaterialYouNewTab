@@ -3,3 +3,6 @@
 
 # Ignore VSCode workspace settings
 .vscode/
+
+# Ignore build folder
+build/

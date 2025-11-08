@@ -153,6 +153,7 @@
 .bgLightTint {
 	fill: var(--accentLightTint-blue);
 	background-color: var(--accentLightTint-blue);
+	/* backdrop-filter: blur(32px); */
 }
 
 .lessDark {
@@ -2400,6 +2401,8 @@ html[lang="ur"] .qtRounder2 {
 	width: fit-content;
 	/* gap: var(--gap) var(--shortcut-bar-gap-and-padding); */
 	gap: 2rem;
+
+	border-radius: 45px;
 }
 
 .shortcutsContainer::before {
@@ -2861,7 +2864,7 @@ body[data-bg="wallpaper"] .aiToolsCont .toolsCont a {
 	z-index: 999;
 	opacity: 0;
 	/*we are increasing opacity in js file*/
-	transition: all 0.5s;
+	transition: all 0.25s;
 	overflow: hidden;
 }
 
@@ -2872,7 +2875,7 @@ body[data-bg="wallpaper"] .aiToolsCont .toolsCont a {
 	height: 100%;
 	width: 400px;
 	/* change on some languages for fix the buttons */
-	transition: all 0.5s;
+	transition: all 0.25s;
 	transform: translateX(100%);
 	background-color: var(--accentLightTint-blue);
 	border-end-start-radius: var(--round);
@@ -2921,7 +2924,7 @@ body[data-bg="wallpaper"] .aiToolsCont .toolsCont a {
 	height: calc(100% - 140px);
 	/*for this 👁️ look above at🚦🛺 🚜*/
 	/* background-color: oldlace; */
-	transition: all 0.6s;
+	transition: all 0.45s;
 	transform: translateX(100%);
 	opacity: 0;
 	overflow-y: scroll;
@@ -2933,7 +2936,7 @@ body[data-bg="wallpaper"] .aiToolsCont .toolsCont a {
 	padding: 0 var(--gap) var(--gap) var(--gap);
 	position: absolute;
 	scroll-behavior: smooth;
-	transition: all 0.6s;
+	transition: all 0.45s;
 }
 
 /* -----------Scrollbar for menu---------------- */

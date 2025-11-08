@@ -100,8 +100,54 @@ document.getElementById("imageUpload").addEventListener("change", function (even
 });
 
 // Fetch and apply random image as background
-const RANDOM_IMAGE_URL = "https://picsum.photos/1920/1080";
+const RANDOM_IMAGE_URL = "https://api.unsplash.com/photos/random?count=1&collections=1053828";
 
+async function getDominantColorFromBlob(blob) {
+    const img = new Image();
+    img.src = URL.createObjectURL(blob);
+
+    await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+    });
+
+    // Scale down the image to reduce processing
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const width = 100;
+    const height = Math.round((img.height / img.width) * 100);
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    const colorCount = {};
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+        if (a < 128) continue; // ignore transparent pixels
+        const key = `${r},${g},${b}`;
+        colorCount[key] = (colorCount[key] || 0) + 1;
+    }
+
+    let dominantColor = null;
+    let maxCount = 0;
+    for (const key in colorCount) {
+        if (colorCount[key] > maxCount) {
+            maxCount = colorCount[key];
+            dominantColor = key;
+        }
+    }
+
+    const rgb = dominantColor.split(',').map(Number);
+    const hex = `#${((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)}`;
+    return hex
+}
 async function applyRandomImage(showConfirmation = true) {
     if (showConfirmation && !(await confirmPrompt(
         translations[currentLanguage]?.confirmWallpaper || translations["en"].confirmWallpaper
@@ -109,11 +155,19 @@ async function applyRandomImage(showConfirmation = true) {
         return;
     }
     try {
-        const response = await fetch(RANDOM_IMAGE_URL);
-        const blob = await response.blob(); // Get Blob from response
+        const response = await fetch(RANDOM_IMAGE_URL, {
+            headers: {
+                "Authorization": "Client-ID 1351e7003b0e869c6d7b221fe548c25216b16571ad28866446c06196ba1902d7"
+            }
+        });
+        const data = await response.json()
+        const img = data[0].urls.raw
+        const imgResponse = await fetch(img)
+        const blob = await imgResponse.blob(); // Get Blob from response
         const imageUrl = URL.createObjectURL(blob);
 
         document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
+        applyCustomTheme(await getDominantColorFromBlob(blob))
         await saveImageToIndexedDB(blob, true);
         toggleBackgroundType(true);
         setTimeout(() => URL.revokeObjectURL(imageUrl), 2000); // Delay URL revocation
@@ -123,8 +177,9 @@ async function applyRandomImage(showConfirmation = true) {
 }
 
 // Function to update the background type attribute
-function toggleBackgroundType(hasWallpaper) {
+function toggleBackgroundType(hasWallpaper, blob) {
     document.body.setAttribute("data-bg", hasWallpaper ? "wallpaper" : "color");
+    getDominantColorFromBlob(blob).then(color => applyCustomTheme(color))
 }
 
 // Check and update image on page load
@@ -145,17 +200,17 @@ function checkAndUpdateImage() {
 
             if (imageType === "upload") {
                 document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
-                toggleBackgroundType(true);
+                toggleBackgroundType(true, blob);
                 return;
             }
 
-            if (lastUpdate.toDateString() !== now.toDateString()) {
-                // Refresh random image if a new day
+            if (lastUpdate.getTime() - now.getTime() > 15 * 60 * 1000) {
+                // Refresh random image after 15min
                 applyRandomImage(false);
             } else {
                 // Reapply the saved random image
                 document.body.style.setProperty("--bg-image", `url(${imageUrl})`);
-                toggleBackgroundType(true);
+                toggleBackgroundType(true, blob);
             }
 
             // Clean up the Blob URL after setting the background
@@ -198,4 +253,7 @@ document.getElementById("randomImageTrigger").addEventListener("click", applyRan
 
 // Start image check on page load
 checkAndUpdateImage();
+setInterval(() => {
+    checkAndUpdateImage()
+}, 15 * 60 * 1000);
 // ------------------------ End of BG Image --------------------------

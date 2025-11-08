@@ -379,6 +379,7 @@ async function getWeatherData() {
 
                 let data = await fetch(weatherApi);
                 parsedData = await data.json();
+                console.log(parsedData)
                 if (!parsedData.error) {
                     // Extract only the necessary fields before saving
                     const filteredData = {
@@ -619,3 +620,7 @@ minMaxTempCheckbox.addEventListener("change", () => {
     localStorage.setItem("minMaxTempEnabled", isChecked);
     location.reload();
 });
+
+document.querySelector("div.rAndakar").addEventListener("click", () => {
+    window.open('https://www.accuweather.com/web-api/three-day-redirect')
+})
